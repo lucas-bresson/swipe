@@ -18,7 +18,12 @@ const App = () => {
 
   return (
     <View style={styles.container}>
-      <Deck data={data} renderCard={renderCard} />
+      <Deck
+        data={data}
+        renderCard={renderCard}
+        onSwipeLeft={() => console.log('swiped left')}
+        onSwipeRight={() => console.log('swiped right')}
+      />
     </View>
   );
 };
