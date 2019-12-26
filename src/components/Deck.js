@@ -1,11 +1,24 @@
-import React, { useRef, useMemo } from 'react';
-import { View, PanResponder, Animated, Dimensions } from 'react-native';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import {
+  View,
+  PanResponder,
+  Animated,
+  Dimensions,
+  Platform,
+} from 'react-native';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const SWIPE_TRESHOLD = 0.25 * SCREEN_WIDTH;
+const SWIPE_TRESHOLD = SCREEN_WIDTH * 0.25;
 const SWIPE_OUT_DURATION = 250;
 
-const Deck = ({ data, renderCard, onSwipeLeft, onSwipeRight }) => {
+const Deck = ({
+  data,
+  renderCard,
+  renderNoMoreCards,
+  onSwipeLeft,
+  onSwipeRight,
+}) => {
+  const [index, setIndex] = useState(0);
   const position = useRef(new Animated.ValueXY()).current;
   const panResponder = useMemo(() =>
     PanResponder.create({
@@ -26,6 +39,11 @@ const Deck = ({ data, renderCard, onSwipeLeft, onSwipeRight }) => {
     }),
   );
 
+  // Reset the index if Deck is given a new set of data
+  useEffect(() => {
+    setIndex(0);
+  }, [data]);
+
   const forceSwipe = direction => {
     const x = direction === 'left' ? -SCREEN_WIDTH : SCREEN_WIDTH;
     Animated.timing(position, {
@@ -35,7 +53,9 @@ const Deck = ({ data, renderCard, onSwipeLeft, onSwipeRight }) => {
   };
 
   const onSwipeComplete = direction => {
-    direction === 'left' ? onSwipeLeft() : onSwipeRight();
+    direction === 'left' ? onSwipeLeft(data[index]) : onSwipeRight(data[index]);
+    position.setValue({ x: 0, y: 0 });
+    setIndex(index + 1);
   };
 
   const resetPosition = () => {
@@ -57,26 +77,54 @@ const Deck = ({ data, renderCard, onSwipeLeft, onSwipeRight }) => {
   };
 
   const renderCards = () => {
-    return data.map((item, index) => {
-      if (index === 0) {
+    if (index >= data.length) {
+      return renderNoMoreCards();
+    }
+
+    return data.map((item, i) => {
+      if (i < index) {
+        return null;
+      }
+      if (i === index) {
         return (
           <Animated.View
             key={item.id}
-            style={getCardStyle()}
+            style={[styles.card(i), {}, getCardStyle()]}
             {...panResponder.panHandlers}
           >
             {renderCard(item)}
           </Animated.View>
         );
       }
-      return renderCard(item);
+
+      return (
+        <Animated.View
+          key={item.id}
+          style={[styles.card(i), { top: 15 * (i - index) }]}
+        >
+          {renderCard(item)}
+        </Animated.View>
+      );
     });
   };
 
   return <View>{renderCards()}</View>;
 };
 
+Deck.defaultProps = {
+  onSwipeLeft: () => {},
+  onSwipeRight: () => {},
+};
+
 export default Deck;
+
+const styles = {
+  card: i => ({
+    position: 'absolute',
+    width: SCREEN_WIDTH,
+    zIndex: i * -1, // position: 'absolute' stacks the card on top of each other. We need that line to reverse their order
+  }),
+};
 
 // https://facebook.github.io/react-native/docs/panresponder
 // https://facebook.github.io/react-native/docs/animated

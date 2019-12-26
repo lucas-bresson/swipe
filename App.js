@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, SafeAreaView } from 'react-native';
 import { Card, Button } from 'react-native-elements';
 import Deck from './src/components/Deck';
 import data from './src/data';
@@ -7,7 +7,7 @@ import data from './src/data';
 const App = () => {
   const renderCard = item => (
     <Card key={item.id} title={item.text} image={{ uri: item.uri }}>
-      <Text style={{ marginBottom: 10 }}>Lorem ipsum</Text>
+      <Text style={styles.text}>Lorem ipsum</Text>
       <Button
         icon={{ name: 'code' }}
         backgroundColor="#03A9F4"
@@ -16,15 +16,21 @@ const App = () => {
     </Card>
   );
 
+  const renderNoMoreCards = () => (
+    <Card title="All done!">
+      <Text style={styles.text}>There's no more content here</Text>
+      <Button backgroundColor="#03A9F4" title="Get more" />
+    </Card>
+  );
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Deck
         data={data}
         renderCard={renderCard}
-        onSwipeLeft={() => console.log('swiped left')}
-        onSwipeRight={() => console.log('swiped right')}
+        renderNoMoreCards={renderNoMoreCards}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -34,5 +40,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+
+  text: {
+    marginBottom: 10,
   },
 });
